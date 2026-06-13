@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import apply_theme, PLOT_STYLE, PALETTE
+from utlis import apply_theme, PLOT_STYLE, PALETTE
 
 st.set_page_config(page_title="Model Comparison", page_icon="⚖️", layout="wide")
 apply_theme()
