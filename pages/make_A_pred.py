@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import joblib
 import json
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import apply_theme, COLUMNS, DATA_URL
 
 st.set_page_config(page_title="Make a Prediction", page_icon="🩺", layout="wide")
