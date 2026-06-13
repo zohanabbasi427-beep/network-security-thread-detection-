@@ -5,10 +5,12 @@ import joblib
 import json
 import sys
 import os
+
+# System path set kar rahe hain taaki baahar padi utlis.py mil jaye
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utlis import apply_theme, COLUMNS, DATA_URL
 
-st.set_page_config(page_title="Make a Prediction", page_icon="🩺", layout="wide")
+st.set_page_config(page_title="Make a Prediction", page_icon="🛡️", layout="wide")
 apply_theme()
 
 st.title("🛡️ Make a Prediction")
@@ -33,11 +35,28 @@ def load_artifacts():
     with open("categorical_cols.json", "r") as f:
         categorical_cols = json.load(f)
 
-    models = {
-        "Logistic Regression": joblib.load("log_model.pkl"),
-        "Random Forest": joblib.load("rf_model.pkl"),
-        "Neural Network (MLP)": joblib.load("mlp_model.pkl"),
-    }
+    # Models dict bana rahe hain
+    models = {}
+    
+    # 1. Logistic Regression Load karein
+    try:
+        models["Logistic Regression"] = joblib.load("log_model.pkl")
+    except Exception as e:
+        st.warning(f"Logistic Regression load nahi ho saka: {e}")
+
+    # 2. Random Forest Load karein
+    try:
+        models["Random Forest"] = joblib.load("rf_model.pkl")
+    except Exception as e:
+        st.warning(f"Random Forest load nahi ho saka: {e}")
+
+    # 3. Neural Network (MLP) ko alag bypass mein daal diya taaki crash na ho!
+    try:
+        models["Neural Network (MLP)"] = joblib.load("mlp_model.pkl")
+    except Exception as e:
+        # Background mein crash handle ho jayega, warning screen par dikhegi
+        st.sidebar.error("⚠️ MLP Model version mismatch ki wajah se disabled hai.")
+
     return (scaler, selector, label_encoders, target_encoder,
             selected_features, all_features, categorical_cols, models)
 
@@ -83,7 +102,9 @@ try:
                 format="%.5f"
             )
 
-    model_choice = st.selectbox("🤖 Choose a Model", list(models.keys()))
+    # Sirf wahi models dropdown mein aayenge jo sahi se load hue hain
+    available_models = [m for m, obj in models.items() if obj is not None]
+    model_choice = st.selectbox("🤖 Choose a Model", available_models)
 
     if st.button("🔍 Detect Threat"):
         full_input = []
