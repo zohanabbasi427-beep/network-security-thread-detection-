@@ -5,12 +5,11 @@ import joblib
 import json
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 import sys
 import os
 
-# System path taaki baahar padi utlis.py mil sake
+# System path set kar rahe hain taaki baahar padi utlis.py mil sake
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utlis import apply_theme, COLUMNS, DATA_URL, PLOT_STYLE
 
@@ -18,7 +17,6 @@ st.set_page_config(page_title="Model Insights", page_icon="🔬", layout="wide")
 apply_theme()
 
 st.title("🔬 Model Insights")
-
 st.markdown("""
 This page shows the **confusion matrix**, **classification report**, and **K-Means clustering** view for the trained models.
 """)
@@ -39,9 +37,7 @@ def load_artifacts():
     with open("categorical_cols.json", "r") as f:
         categorical_cols = json.load(f)
 
-    # Models dictionary with safe bypass for MLP
     models = {}
-    
     try:
         models["Logistic Regression"] = joblib.load("log_model.pkl")
     except Exception as e:
@@ -52,33 +48,92 @@ def load_artifacts():
     except Exception as e:
         st.warning(f"Random Forest load nahi ho saka: {e}")
 
-    # MLP ko safe block mein rakha taaki app crash na ho
     try:
         models["Neural Network (MLP)"] = joblib.load("mlp_model.pkl")
     except Exception as e:
-        st.sidebar.error("⚠️ MLP Model version mismatch ki wajah se disabled hai.")
+        st.sidebar.error("⚠️.")
         models["Neural Network (MLP)"] = None
 
     return (scaler, selector, label_encoders, target_encoder, kmeans,
-            categorical_cols, selected_features, models)
+            categorical_cols, selected_features, models, all_features)
+
+@st.cache_data
+def load_evaluation_data():
+    # Dataset load karke validation split banana testing ke liye
+    df = pd.read_csv(DATA_URL, names=COLUMNS)
+    return df
 
 try:
     (scaler, selector, label_encoders, target_encoder, kmeans,
-     categorical_cols, selected_features, models) = load_artifacts()
+     categorical_cols, selected_features, models, all_features) = load_artifacts()
 
-    # Filter out models jo sahi se load nahi hue (MLP agar None hai toh dropdown mein nahi aayega)
+    df_raw = load_evaluation_data()
+
+    # Model choices filter kar rahe hain
     available_models = [m for m, obj in models.items() if obj is not None]
     
     st.subheader("📊 Select Model for Insights")
     model_choice = st.selectbox("🤖 Choose a Model", available_models)
 
-    # --- Yahan aapka baaki ka Confusion Matrix aur Clustering ka evaluation code aayega ---
-    st.info(f"Showing insights for: **{model_choice}**")
-    
-    # K-Means section chalane ke liye
+    # --- Data Processing for Evaluation ---
+    with st.spinner("Generating metrics and visualizations..."):
+        # Target aur features alag karna
+        X_eval = df_raw.drop(columns=['difficulty', 'label'])
+        y_eval = df_raw['label']
+
+        # Categorical variables encode karna
+        X_eval_encoded = X_eval.copy()
+        for col in categorical_cols:
+            X_eval_encoded[col] = label_encoders[col].transform(X_eval_encoded[col])
+
+        y_eval_encoded = target_encoder.transform(y_eval)
+
+        # Pipeline transformation (Scaling -> Feature Selection)
+        X_scaled = scaler.transform(X_eval_encoded[all_features])
+        X_selected = selector.transform(X_scaled)
+
+        # Predictions generate karna
+        current_model = models[model_choice]
+        y_pred = current_model.predict(X_selected)
+
+        # --- Display Results Side by Side ---
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.subheader("🎯 Confusion Matrix")
+            cm = confusion_matrix(y_eval_encoded, y_pred)
+            fig, ax = plt.subplots(figsize=(5, 4))
+            sns.heatmap(
+                cm, annot=True, fmt="d", cmap="Blues",
+                xticklabels=target_encoder.classes_,
+                yticklabels=target_encoder.classes_, ax=ax
+            )
+            plt.ylabel('Actual')
+            plt.xlabel('Predicted')
+            st.pyplot(fig)
+
+        with col2:
+            st.subheader("📋 Classification Report")
+            report_dict = classification_report(y_eval_encoded, y_pred, target_names=target_encoder.classes_, output_dict=True)
+            report_df = pd.DataFrame(report_dict).transpose()
+            st.dataframe(report_df.style.format(precision=4), use_container_width=True)
+
+    # --- K-Means Clustering Section ---
     if kmeans is not None:
+        st.markdown("---")
         st.subheader("🎯 K-Means Clustering View")
-        # Aapka K-Means plotting ka code yahan perfectly run karega...
+        
+        # Sample data select kar rahe hain plotting ko fast rakhne ke liye
+        X_sample = X_scaled[:1000] 
+        cluster_labels = kmeans.predict(X_sample)
+        
+        fig2, ax2 = plt.subplots(figsize=(8, 4))
+        scatter = ax2.scatter(X_sample[:, 0], X_sample[:, 1], c=cluster_labels, cmap='viridis', alpha=0.6)
+        ax2.set_title("K-Means Cluster Assignments (First 2 Components)")
+        fig2.colorbar(scatter, ax=ax2)
+        st.pyplot(fig2)
 
 except FileNotFoundError as e:
     st.error(f"⚠️ Required model file not found: {e}. Please check your repository.")
+except Exception as e:
+    st.error(f"⚠️ Data transformation error: {e}")
