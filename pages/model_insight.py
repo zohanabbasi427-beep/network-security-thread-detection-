@@ -79,7 +79,7 @@ try:
         # Target aur features alag karna
         X_eval = df_raw.drop(columns=['difficulty', 'label'])
         
-        # 🔥 FIX: Har attack type (jaise 'neptune') ko 'attack' label mein map kar rahe hain
+        # Har attack type ko 'attack' label mein map kar rahe hain
         y_eval = df_raw['label'].apply(lambda x: 'normal' if x == 'normal' else 'attack')
 
         # Categorical variables encode karna
@@ -125,13 +125,14 @@ try:
         st.markdown("---")
         st.subheader("🎯 K-Means Clustering View")
         
-        # Processing a small sample for smooth dashboard performance
-        X_sample = X_scaled[:1000] 
-        cluster_labels = kmeans.predict(X_sample)
+        # 🔥 FIX: KMeans ko poore 41 features (X_scaled) ke bajaye selected 15 features (X_selected) de rahe hain
+        X_sample_selected = X_selected[:1000] 
+        cluster_labels = kmeans.predict(X_sample_selected)
         
         fig2, ax2 = plt.subplots(figsize=(8, 4))
-        scatter = ax2.scatter(X_sample[:, 0], X_sample[:, 1], c=cluster_labels, cmap='viridis', alpha=0.6)
-        ax2.set_title("K-Means Cluster Assignments (First 2 Selected Components)")
+        # Plotting first two columns of selected features
+        scatter = ax2.scatter(X_sample_selected[:, 0], X_sample_selected[:, 1], c=cluster_labels, cmap='viridis', alpha=0.6)
+        ax2.set_title("K-Means Cluster Assignments (First 2 Selected Features)")
         fig2.colorbar(scatter, ax=ax2)
         st.pyplot(fig2)
 
