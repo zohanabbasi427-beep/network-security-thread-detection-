@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import apply_theme, COLUMNS, DATA_URL, PLOT_STYLE, PALETTE
 
 st.set_page_config(page_title="EDA & Visualizations", page_icon="📉", layout="wide")
