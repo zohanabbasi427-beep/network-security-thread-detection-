@@ -3,7 +3,7 @@ import pandas as pd
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import apply_theme, COLUMNS, DATA_URL
+from utlis import apply_theme, COLUMNS, DATA_URL
 
 st.set_page_config(page_title="Dataset Overview", page_icon="📊", layout="wide")
 apply_theme()
