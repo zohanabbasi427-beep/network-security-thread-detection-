@@ -7,7 +7,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
-from utils import apply_theme, COLUMNS, DATA_URL, PLOT_STYLE
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utlis import apply_theme, COLUMNS, DATA_URL, PLOT_STYLE
 
 st.set_page_config(page_title="Model Insights", page_icon="🔬", layout="wide")
 apply_theme()
