@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import apply_theme
+from utlis import apply_theme
 
 st.set_page_config(
     page_title="Network Intrusion Detection",
