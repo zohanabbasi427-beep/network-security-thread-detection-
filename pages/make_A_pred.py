@@ -55,7 +55,7 @@ def load_artifacts():
         models["Neural Network (MLP)"] = joblib.load("mlp_model.pkl")
     except Exception as e:
         # Background mein crash handle ho jayega, warning screen par dikhegi
-        st.sidebar.error("⚠️ MLP Model version mismatch ki wajah se disabled hai.")
+        st.sidebar.error(".")
 
     return (scaler, selector, label_encoders, target_encoder,
             selected_features, all_features, categorical_cols, models)
