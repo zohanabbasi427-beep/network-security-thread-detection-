@@ -52,7 +52,7 @@ def load_artifacts():
     try:
         models["Neural Network (MLP)"] = joblib.load("mlp_model.pkl")
     except Exception as e:
-        st.sidebar.error(".")
+        st.sidebar.error("⚠️ MLP Model version mismatch ki wajah se disabled hai.")
         models["Neural Network (MLP)"] = None
 
     return (scaler, selector, label_encoders, target_encoder, kmeans,
