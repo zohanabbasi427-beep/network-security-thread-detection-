@@ -101,4 +101,40 @@ try:
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("🎯
+            st.subheader("🎯 Confusion Matrix")
+            cm = confusion_matrix(y_eval_encoded, y_pred)
+            fig, ax = plt.subplots(figsize=(5, 4))
+            sns.heatmap(
+                cm, annot=True, fmt="d", cmap="Blues",
+                xticklabels=target_encoder.classes_,
+                yticklabels=target_encoder.classes_, ax=ax
+            )
+            plt.ylabel('Actual Label')
+            plt.xlabel('Predicted Label')
+            st.pyplot(fig)
+
+        with col2:
+            st.subheader("📋 Classification Report")
+            report_dict = classification_report(y_eval_encoded, y_pred, target_names=target_encoder.classes_, output_dict=True)
+            report_df = pd.DataFrame(report_dict).transpose()
+            st.dataframe(report_df.style.format(precision=4), use_container_width=True)
+
+    # --- K-Means Clustering Section ---
+    if kmeans is not None:
+        st.markdown("---")
+        st.subheader("🎯 K-Means Clustering View")
+        
+        X_sample_selected = X_selected[:1000] 
+        cluster_labels = kmeans.predict(X_sample_selected)
+        
+        fig2, ax2 = plt.subplots(figsize=(8, 4))
+        # Plotting first two columns of selected features
+        scatter = ax2.scatter(X_sample_selected[:, 0], X_sample_selected[:, 1], c=cluster_labels, cmap='viridis', alpha=0.6)
+        ax2.set_title("K-Means Cluster Assignments (First 2 Selected Features)")
+        fig2.colorbar(scatter, ax=ax2)
+        st.pyplot(fig2)
+
+except FileNotFoundError as e:
+    st.error(f"⚠️ Required model file not found: {e}. Please check your repository files.")
+except Exception as e:
+    st.error(f"⚠️ Unexpected Error: {e}")
